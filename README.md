@@ -1,0 +1,1 @@
+# smart_farmer_assistant
