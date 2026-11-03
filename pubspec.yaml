@@ -1,0 +1,59 @@
+name: smart_farmer_assistant
+
+description: Smart Farmer Assistant with AI Crop Doctor
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  speech_to_text: ^7.4.0
+  flutter_tts: ^4.2.5
+  cupertino_icons: ^1.0.8
+
+  firebase_core: ^3.15.2
+  firebase_auth: ^5.7.0
+  cloud_firestore: ^5.6.12
+  google_sign_in: ^6.3.0
+
+  http: ^1.6.0
+
+  image_picker: ^1.2.0
+
+  flutter_local_notifications: ^22.3.0
+
+  flutter_timezone: ^5.1.0
+
+  timezone: ^0.11.1
+  geolocator: ^14.0.3
+  geocoding: ^5.0.0
+  shared_preferences: ^2.5.5
+  url_launcher: ^6.3.2
+  tflite_flutter: ^0.12.1
+  image: ^4.9.2
+  flutter_markdown: ^0.7.7+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_launcher_icons: ^0.14.4
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/models/plant_disease_38class.tflite
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/app_logo.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/app_logo.png"

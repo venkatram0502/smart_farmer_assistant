@@ -1,0 +1,1010 @@
+﻿import 'package:flutter/material.dart';
+
+import '../../services/weather_service.dart';
+import '../../utils/language.dart';
+
+import '../weather/weather_screen.dart';
+import '../crop_doctor/crop_doctor_screen.dart';
+import '../chatbot/chatbot_screen.dart';
+import '../dashboard/dashboard_feature_screens.dart';
+
+class HomeScreen extends StatefulWidget {
+  final String username;
+  final String mobileNumber;
+
+  const HomeScreen({
+    super.key,
+    required this.username,
+    required this.mobileNumber,
+  });
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  WeatherData? _weather;
+  bool _weatherLoading = true;
+  String? _weatherError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWeather();
+  }
+
+  // ============================================================
+  // WEATHER
+  // ============================================================
+
+  Future<void> _loadWeather() async {
+    setState(() {
+      _weatherLoading = true;
+      _weatherError = null;
+    });
+
+    try {
+      final data = await WeatherService.getWeather();
+
+      if (!mounted) return;
+
+      setState(() {
+        _weather = data;
+        _weatherLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _weatherLoading = false;
+        _weatherError = 'Unable to load weather';
+      });
+    }
+  }
+
+  // ============================================================
+  // OPEN SCREEN
+  // ============================================================
+
+  void _open(Widget screen) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => screen,
+      ),
+    );
+  }
+
+  // ============================================================
+  // LANGUAGE
+  // ============================================================
+
+  void _showLanguageSelector() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(25),
+        ),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Choose Language',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                const Text(
+                  'మ�? భాషను �Z�,�sు�.�<�,డి',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.grey,
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // ENGLISH
+                ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Color(0xFFE5F4E5),
+                    child: Text(
+                      'EN',
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  title: const Text(
+                    'English',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  trailing: !isTelugu
+                      ? const Icon(
+                          Icons.check_circle,
+                          color: Colors.green,
+                        )
+                      : null,
+                  onTap: () {
+                    LanguageController.instance.setTelugu(false);
+
+                    Navigator.pop(sheetContext);
+
+                    setState(() {});
+                  },
+                ),
+
+                // TELUGU
+                ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Color(0xFFE5F4E5),
+                    child: Text(
+                      'త�?',
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  title: const Text(
+                    'త�?లు�-ు',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  trailing: isTelugu
+                      ? const Icon(
+                          Icons.check_circle,
+                          color: Colors.green,
+                        )
+                      : null,
+                  onTap: () {
+                    LanguageController.instance.setTelugu(true);
+
+                    Navigator.pop(sheetContext);
+
+                    setState(() {});
+                  },
+                ),
+
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ============================================================
+  // GREETING
+  // ============================================================
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+
+    if (hour >= 5 && hour < 12) {
+      return isTelugu
+          ? 'శుభ�<దయ�,, ${widget.username} �Y'<'
+          : 'Good Morning, ${widget.username} �Y'<';
+    }
+
+    if (hour >= 12 && hour < 17) {
+      return isTelugu
+          ? 'శుభ మధ్యాహ్న�,, ${widget.username} �Y'<'
+          : 'Good Afternoon, ${widget.username} �Y'<';
+    }
+
+    if (hour >= 17 && hour < 21) {
+      return isTelugu
+          ? 'శుభ సాయ�,త్ర�,, ${widget.username} �Y'<'
+          : 'Good Evening, ${widget.username} �Y'<';
+    }
+
+    return isTelugu
+        ? 'శుభ రాత్రి, ${widget.username} �YOT'
+        : 'Good Night, ${widget.username} �YOT';
+  }
+
+  // ============================================================
+  // ACCOUNT
+  // ============================================================
+
+  void _showAccountDetails() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(25),
+        ),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Account Details',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                CircleAvatar(
+                  radius: 35,
+                  backgroundColor: Colors.green.shade100,
+                  child: const Icon(
+                    Icons.person,
+                    size: 40,
+                    color: Colors.green,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: const Icon(
+                    Icons.person,
+                    color: Colors.green,
+                  ),
+                  title: const Text('Username'),
+                  subtitle: Text(widget.username),
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.phone,
+                    color: Colors.green,
+                  ),
+                  title: const Text('Mobile Number'),
+                  subtitle: Text(widget.mobileNumber),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF5FAF5),
+      body: SafeArea(
+        child: RefreshIndicator(
+          color: Colors.green,
+          onRefresh: _loadWeather,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(
+              20,
+              18,
+              20,
+              30,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ==================================================
+                // TOP BAR
+                // ==================================================
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _getGreeting(),
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF171717),
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            isTelugu
+                                ? 'స్మార్�Y్ ఫార్మర్ �.సిస్�Y�?�,�Y్�?O�.ు స్వా�-త�,'
+                                : 'Welcome to Smart Farmer Assistant',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // LANGUAGE
+                    Material(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: _showLanguageSelector,
+                        child: const Padding(
+                          padding: EdgeInsets.all(11),
+                          child: Icon(
+                            Icons.language,
+                            color: Colors.green,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    // NOTIFICATION
+                    Material(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isTelugu
+                                    ? 'న�<�Yిఫి�.�?షన్లు త్వరల�< �.�,దుబా�Yుల�< �?�,�Yాయి'
+                                    : 'Notifications will be available here',
+                              ),
+                            ),
+                          );
+                        },
+                        child: const Padding(
+                          padding: EdgeInsets.all(11),
+                          child: Icon(
+                            Icons.notifications_none_rounded,
+                            color: Colors.green,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    // ACCOUNT
+                    Material(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: _showAccountDetails,
+                        child: const Padding(
+                          padding: EdgeInsets.all(11),
+                          child: Icon(
+                            Icons.person_outline_rounded,
+                            color: Colors.green,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
+                // ==================================================
+                // WEATHER CARD
+                // ==================================================
+
+                _WeatherDashboardCard(
+                  weather: _weather,
+                  loading: _weatherLoading,
+                  error: _weatherError,
+                  onRefresh: _loadWeather,
+                ),
+
+                const SizedBox(height: 26),
+
+                // ==================================================
+                // TITLE
+                // ==================================================
+
+                Text(
+                  isTelugu ? 'స్మార్�Y్ వ్యవసాయ సాధనాలు' : 'Smart Farming Tools',
+                  style: const TextStyle(
+                    fontSize: 21,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF171717),
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                // ==================================================
+                // FEATURE GRID
+                // ==================================================
+
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 1.03,
+                  children: [
+                    // AI CROP DOCTOR
+                    _ToolCard(
+                      icon: Icons.local_hospital_rounded,
+                      title: isTelugu ? 'AI ప�,�Y వ�^ద్యుడు' : 'AI Crop Doctor',
+                      subtitle: isTelugu
+                          ? 'ప�,�Y వ్యాధులను �-ుర్తి�,�s�,డి'
+                          : 'Detect crop diseases',
+                      iconColor: Colors.red,
+                      iconBackground: const Color(0xFFFFE4E0),
+                      onTap: () {
+                        _open(
+                          const CropDoctorScreen(),
+                        );
+                      },
+                    ),
+
+                    // WEATHER
+                    _ToolCard(
+                      icon: Icons.cloud_rounded,
+                      title: isTelugu ? 'వాతావరణ�,' : 'Weather',
+                      subtitle: isTelugu
+                          ? 'ప్రస్తుత & 5 ర�<�oుల స�,�sన'
+                          : 'Current & 5-day forecast',
+                      iconColor: Colors.blue,
+                      iconBackground: const Color(0xFFE1F1FF),
+                      onTap: () {
+                        _open(
+                          const WeatherScreen(),
+                        );
+                      },
+                    ),
+
+                    // SOIL ANALYSIS
+                    _ToolCard(
+                      icon: Icons.grass_rounded,
+                      title: isTelugu ? 'న�?ల విశ్ల�?షణ' : 'Soil Analysis',
+                      subtitle: isTelugu
+                          ? 'మ�? న�?లను విశ్ల�?షి�,�s�,డి'
+                          : 'Analyze your soil',
+                      iconColor: Colors.brown,
+                      iconBackground: const Color(0xFFF1E5D8),
+                      onTap: () {
+                        _open(
+                          const SoilAnalysisScreen(),
+                        );
+                      },
+                    ),
+
+                    // CROP RECOMMENDATION
+                    _ToolCard(
+                      icon: Icons.agriculture_rounded,
+                      title: isTelugu ? 'ప�,�Y సిఫార్సు' : 'Crop Recommendation',
+                      subtitle: isTelugu
+                          ? '�.ను�.�,లమ�^న ప�,�Yలను �.ను�-�Sన�,డి'
+                          : 'Find suitable crops',
+                      iconColor: Colors.green,
+                      iconBackground: const Color(0xFFE1F2DF),
+                      onTap: () {
+                        _open(
+                          const CropRecommendationScreen(),
+                        );
+                      },
+                    ),
+
+                    // MARKET PRICES
+                    _ToolCard(
+                      icon: Icons.currency_rupee_rounded,
+                      title: isTelugu ? 'మార్�.�?�Y్ ధరలు' : 'Market Prices',
+                      subtitle:
+                          isTelugu ? 'ప�,�Y ధరలను �s�,డ�,డి' : 'Check crop prices',
+                      iconColor: Colors.orange,
+                      iconBackground: const Color(0xFFFFEED7),
+                      onTap: () {
+                        _open(
+                          const MarketPricesScreen(),
+                        );
+                      },
+                    ),
+
+                    // AI CHATBOT
+                    _ToolCard(
+                      icon: Icons.smart_toy_rounded,
+                      title: isTelugu ? 'AI �sా�Y్�?Oబా�Y్' : 'AI Chatbot',
+                      subtitle: isTelugu
+                          ? 'వ్యవసాయ ప్రశ్నలు �.డ�-�,డి'
+                          : 'Ask farming questions',
+                      iconColor: Colors.purple,
+                      iconBackground: const Color(0xFFF0E3FF),
+                      onTap: () {
+                        _open(
+                          const ChatbotScreen(),
+                        );
+                      },
+                    ),
+
+                    // FARM DIARY
+                    _ToolCard(
+                      icon: Icons.menu_book_rounded,
+                      title: isTelugu ? 'వ్యవసాయ డ�^ర�?' : 'Farm Diary',
+                      subtitle: isTelugu
+                          ? 'వ్యవసాయ �.ార్య�.లాపాలను నమ�<దు �s�?య�,డి'
+                          : 'Record farm activities',
+                      iconColor: Colors.teal,
+                      iconBackground: const Color(0xFFDDF4EF),
+                      onTap: () {
+                        _open(
+                          const FarmDiaryScreen(),
+                        );
+                      },
+                    ),
+
+                    // GOVERNMENT SCHEMES
+                    _ToolCard(
+                      icon: Icons.account_balance_rounded,
+                      title:
+                          isTelugu ? 'ప్రభుత్వ పథ�.ాలు' : 'Government Schemes',
+                      subtitle: isTelugu
+                          ? 'ర�^తు ప్రయ�<�oనాలను �s�,డ�,డి'
+                          : 'View farmer benefits',
+                      iconColor: Colors.indigo,
+                      iconBackground: const Color(0xFFE5E9FF),
+                      onTap: () {
+                        _open(
+                          const GovernmentSchemesScreen(),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 22),
+
+                // ==================================================
+                // FARMING TIP
+                // ==================================================
+
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE8F5E9),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.lightbulb_rounded,
+                        color: Colors.green,
+                        size: 28,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              isTelugu
+                                  ? '�^ర�<�oు వ్యవసాయ �sి�Y్�.ా'
+                                  : 'Today�?Ts Farming Tip',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              isTelugu
+                                  ? 'ప�,�Yల�.ు న�?రు ప�?�Y్�Y�? ము�,దు వాతావరణ స�,�sనను పరిశ�?లి�,�s�,డి.'
+                                  : 'Check the weather forecast before irrigating your crops.',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                height: 1.4,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// WEATHER DASHBOARD CARD
+// ============================================================================
+
+class _WeatherDashboardCard extends StatelessWidget {
+  final WeatherData? weather;
+  final bool loading;
+  final String? error;
+  final Future<void> Function() onRefresh;
+
+  const _WeatherDashboardCard({
+    required this.weather,
+    required this.loading,
+    required this.error,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading) {
+      return Container(
+        width: double.infinity,
+        height: 240,
+        decoration: BoxDecoration(
+          color: const Color(0xFF43A047),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+
+    if (weather == null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF43A047),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          children: [
+            const Icon(
+              Icons.cloud_off_rounded,
+              color: Colors.white,
+              size: 42,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              error ?? 'Unable to load weather',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: onRefresh,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: const BorderSide(
+                  color: Colors.white,
+                ),
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        18,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFF43A047),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.green.withValues(alpha: 0.20),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  "Today's Weather",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: onRefresh,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon: const Icon(
+                  Icons.refresh_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const Icon(
+                Icons.location_on_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                weather!.city,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(
+                _weatherIcon(weather!.description),
+                color: Colors.white,
+                size: 48,
+              ),
+              const SizedBox(width: 14),
+              Text(
+                '${weather!.temperature.toStringAsFixed(1)}°C',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 34,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text(
+            _capitalize(weather!.description),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _WeatherItem(
+                  icon: Icons.water_drop_rounded,
+                  value: '${weather!.humidity}%',
+                  label: 'Humidity',
+                ),
+              ),
+              Expanded(
+                child: _WeatherItem(
+                  icon: Icons.air_rounded,
+                  value: '${weather!.windSpeed.toStringAsFixed(1)} m/s',
+                  label: 'Wind',
+                ),
+              ),
+              Expanded(
+                child: _WeatherItem(
+                  icon: Icons.thermostat_rounded,
+                  value: '${weather!.feelsLike.toStringAsFixed(1)}°C',
+                  label: 'Feels Like',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _capitalize(String value) {
+    if (value.isEmpty) return value;
+
+    return value[0].toUpperCase() + value.substring(1);
+  }
+
+  static IconData _weatherIcon(String description) {
+    final value = description.toLowerCase();
+
+    if (value.contains('rain')) {
+      return Icons.cloudy_snowing;
+    }
+
+    if (value.contains('thunder')) {
+      return Icons.thunderstorm_rounded;
+    }
+
+    if (value.contains('cloud')) {
+      return Icons.cloud_rounded;
+    }
+
+    if (value.contains('mist') ||
+        value.contains('fog') ||
+        value.contains('haze')) {
+      return Icons.foggy;
+    }
+
+    return Icons.wb_sunny_rounded;
+  }
+}
+
+// ============================================================================
+// WEATHER ITEM
+// ============================================================================
+
+class _WeatherItem extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+
+  const _WeatherItem({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(
+          icon,
+          color: Colors.white,
+          size: 20,
+        ),
+        const SizedBox(height: 5),
+        Text(
+          value,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 10,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ============================================================================
+// TOOL CARD
+// ============================================================================
+
+class _ToolCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color iconColor;
+  final Color iconBackground;
+  final VoidCallback onTap;
+
+  const _ToolCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.iconColor,
+    required this.iconBackground,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFFF9FBF6),
+      borderRadius: BorderRadius.circular(17),
+      elevation: 2,
+      shadowColor: Colors.black12,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(17),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 43,
+                height: 43,
+                decoration: BoxDecoration(
+                  color: iconBackground,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: iconColor,
+                  size: 23,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF171717),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  color: Colors.black54,
+                  height: 1.2,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Align(
+                alignment: Alignment.bottomRight,
+                child: Icon(
+                  Icons.chevron_right_rounded,
+                  size: 19,
+                  color: Colors.black54,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+
